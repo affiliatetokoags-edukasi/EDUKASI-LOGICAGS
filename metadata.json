@@ -1,0 +1,6 @@
+{
+  "name": "AGS-LOGIC ESCAPE",
+  "description": "Platform pembelajaran dan game edukasi informatika interaktif berbasis kurikulum untuk siswa SMP — Logic Escape Learning Engine.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
