@@ -19,7 +19,9 @@ import {
   Gift,
   GraduationCap,
   School,
-  Lock
+  Lock,
+  Cloud,
+  Laptop
 } from 'lucide-react';
 import { PlayerStats, ScreenType } from '../types';
 import { sounds } from '../utils/audio';
@@ -27,6 +29,12 @@ import { sounds } from '../utils/audio';
 interface GameHUDProps {
   stats: PlayerStats;
   currentScreen: ScreenType;
+  dataMode?: 'ONLINE' | 'LOCAL_DEMO';
+  onOpenSystemStatus?: () => void;
+  isOnlineAccount?: boolean;
+  studentDisplayName?: string;
+  onOpenStudentProfile?: () => void;
+  onOpenStudentLogin?: () => void;
   onNavigateToMap: () => void;
   onOpenHowToPlay: () => void;
   onOpenResetConfirm: () => void;
@@ -42,6 +50,12 @@ interface GameHUDProps {
 export const GameHUD: React.FC<GameHUDProps> = ({
   stats,
   currentScreen,
+  dataMode = 'LOCAL_DEMO',
+  onOpenSystemStatus,
+  isOnlineAccount,
+  studentDisplayName,
+  onOpenStudentProfile,
+  onOpenStudentLogin,
   onNavigateToMap,
   onOpenHowToPlay,
   onOpenResetConfirm,
@@ -280,6 +294,66 @@ export const GameHUD: React.FC<GameHUDProps> = ({
             >
               <LayoutGrid className="w-3.5 h-3.5 text-cyan-400" />
               <span className="hidden sm:inline">MAP</span>
+            </button>
+          )}
+
+          {/* Mode Indicator Button (Online / Local Demo) */}
+          {onOpenSystemStatus && (
+            <button
+              id="hud-system-status-btn"
+              onClick={() => {
+                sounds.playClick();
+                onOpenSystemStatus();
+              }}
+              title="Status Koneksi & Firebase System (Klik untuk Diagnostik)"
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                dataMode === 'ONLINE'
+                  ? 'bg-emerald-950/60 hover:bg-emerald-900/70 border-emerald-500/40 text-emerald-300'
+                  : 'bg-amber-950/60 hover:bg-amber-900/70 border-amber-500/40 text-amber-300'
+              }`}
+            >
+              {dataMode === 'ONLINE' ? (
+                <>
+                  <Cloud className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="hidden md:inline">☁ ONLINE</span>
+                </>
+              ) : (
+                <>
+                  <Laptop className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden md:inline">💻 LOCAL DEMO</span>
+                </>
+              )}
+            </button>
+          )}
+
+          {/* Student Account Button (V0.7.2) */}
+          {isOnlineAccount && onOpenStudentProfile && (
+            <button
+              id="hud-student-profile-btn"
+              onClick={() => {
+                sounds.playClick();
+                onOpenStudentProfile();
+              }}
+              title={`Akun Siswa: ${studentDisplayName || stats.playerName} (Klik untuk Profil Firestore)`}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-cyan-950/60 hover:bg-cyan-900/70 border border-cyan-500/40 text-xs font-bold text-cyan-300 hover:text-white transition-all cursor-pointer"
+            >
+              <User className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="hidden lg:inline">{studentDisplayName || stats.playerName}</span>
+            </button>
+          )}
+
+          {!isOnlineAccount && onOpenStudentLogin && (
+            <button
+              id="hud-student-login-btn"
+              onClick={() => {
+                sounds.playClick();
+                onOpenStudentLogin();
+              }}
+              title="Masuk atau Buat Akun Siswa"
+              className="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-300 hover:text-white transition-all cursor-pointer"
+            >
+              <User className="w-3.5 h-3.5 text-slate-400" />
+              <span className="hidden lg:inline">LOGIN SISWA</span>
             </button>
           )}
 

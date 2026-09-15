@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions for Authentication & Role Checking (V0.7.3)
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isTeacher() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "teacher";
+    }
+
+    function isStudent() {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "student";
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Health check collection for connection testing
+    match /_connection_test_/{testId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Users Collection (Student & Teacher Profiles)
+    // - Siswa hanya dapat membaca profil miliknya sendiri (data privacy antar-siswa)
+    // - Guru terverifikasi (role == 'teacher') dapat membaca profil untuk keperluan pengajaran & analitik
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isTeacher());
+
+      // Pembuatan profil oleh pengguna terautentikasi (siswa via register atau guru saat inisialisasi akun)
+      allow create: if isSignedIn()
+                    && request.auth.uid == userId
+                    && request.resource.data.uid == request.auth.uid
+                    && (request.resource.data.role in ['student', 'teacher'])
+                    && request.resource.data.isActive == true;
+
+      // Role dan UID bersifat IMMUTABLE: role tidak dapat diubah setelah dibuat
+      allow update: if isSignedIn()
+                    && request.auth.uid == userId
+                    && request.resource.data.uid == resource.data.uid
+                    && request.resource.data.role == resource.data.role;
+
+      // Hapus profil dilarang
+      allow delete: if false;
+    }
+
+    // Players collection: Progress game siswa
+    // - Siswa hanya dapat mengakses datanya sendiri
+    // - Guru dapat membaca untuk keperluan monitoring kelas
+    match /players/{playerId} {
+      allow read: if isOwner(playerId) || isTeacher();
+      allow create, update: if isOwner(playerId) && isValidId(playerId);
+      allow delete: if false;
+    }
+
+    // Assessments collection: Rekap nilai & evaluasi
+    // - Guru dapat membaca semua asesmen
+    // - Siswa hanya dapat melihat asesmen miliknya
+    match /assessments/{assessmentId} {
+      allow read: if isSignedIn() && (
+        isTeacher() || (resource != null && resource.data.userId == request.auth.uid)
+      );
+      allow create: if isSignedIn() && isValidId(assessmentId);
+      allow update, delete: if false;
+    }
+  }
+}

@@ -7,7 +7,9 @@ export type ScreenType =
   | 'level'
   | 'result'
   | 'learning'
-  | 'teacher';
+  | 'teacher'
+  | 'student_login'
+  | 'student_register';
 
 export type ChallengeType = 
   | 'quiz' 

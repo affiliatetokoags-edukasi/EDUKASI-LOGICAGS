@@ -35,7 +35,20 @@ import { ProgressCenterModal } from './components/gamification/ProgressCenterMod
 import { LearningHubScreen } from './components/learning/LearningHubScreen';
 import { TeacherDashboardScreen } from './components/teacher/TeacherDashboardScreen';
 import { TeacherLoginScreen } from './components/teacher/TeacherLoginScreen';
+import { TeacherRouteGuard } from './components/teacher/TeacherRouteGuard';
+import { SystemStatusModal } from './components/SystemStatusModal';
+import { StudentAuthProvider, useStudentAuth } from './context/StudentAuthContext';
+import { TeacherAuthProvider } from './context/TeacherAuthContext';
+import { StudentLoginScreen } from './components/auth/StudentLoginScreen';
+import { StudentRegisterScreen } from './components/auth/StudentRegisterScreen';
+import { StudentProfileModal } from './components/auth/StudentProfileModal';
 import { isTeacherAuthenticated, clearTeacherSession } from './utils/teacherAuth';
+import {
+  FirebaseHealthReport,
+  checkFirebaseConnection,
+  getFirebaseHealthReport,
+  subscribeToFirebaseStatus
+} from './services/firebase';
 import {
   calculatePlayerRank,
   checkLevelUpEvent,
@@ -47,7 +60,8 @@ import {
 } from './utils/gamificationEngine';
 import { PLAYER_RANKS, PLAYER_TITLES, ACHIEVEMENTS_DATA } from './data/gamificationData';
 
-export default function App() {
+function AppContent() {
+  const { user, profile, isAuthenticated, isOnlineAccount, logout } = useStudentAuth();
   const [stats, setStats] = useState<PlayerStats>(() => {
     const loaded = loadGameData();
     const { stats: syncedStats } = ensureDailyMissions(loaded);
@@ -55,6 +69,9 @@ export default function App() {
   });
   const [screen, setScreen] = useState<ScreenType>('home');
   const [teacherAuthenticated, setTeacherAuthenticated] = useState<boolean>(() => isTeacherAuthenticated());
+  const [firebaseHealth, setFirebaseHealth] = useState<FirebaseHealthReport>(() => getFirebaseHealthReport());
+  const [systemStatusOpen, setSystemStatusOpen] = useState<boolean>(false);
+  const [studentProfileOpen, setStudentProfileOpen] = useState<boolean>(false);
   const [activeLevelId, setActiveLevelId] = useState<number>(1);
   const [howToPlayOpen, setHowToPlayOpen] = useState<boolean>(false);
   const [resetConfirmOpen, setResetConfirmOpen] = useState<boolean>(false);
@@ -129,6 +146,45 @@ export default function App() {
   useEffect(() => {
     saveGameData(stats);
   }, [stats]);
+
+  // Firebase Health & Connection Status Listener (V0.7.1)
+  useEffect(() => {
+    // Subscribe to status updates from singleton manager
+    const unsubscribe = subscribeToFirebaseStatus((report) => {
+      setFirebaseHealth(report);
+    });
+
+    // Run initial connection verification
+    checkFirebaseConnection().then((report) => {
+      console.log(`[Firebase] Initial connection check: ${report.status} (${report.dataMode})`);
+    });
+
+    const handleOnline = () => {
+      console.log('[Network] Kembali online, memeriksa koneksi Firebase...');
+      checkFirebaseConnection();
+    };
+
+    const handleOffline = () => {
+      console.log('[Network] Offline terdeteksi, beralih ke Local Demo Mode.');
+      setFirebaseHealth((prev) => ({
+        ...prev,
+        status: 'NOT_CONNECTED',
+        statusLabel: '🔴 FIREBASE NOT CONNECTED',
+        dataMode: 'LOCAL_DEMO',
+        modeLabel: '💻 LOCAL DEMO',
+        message: 'Koneksi jaringan offline. LOGIC ESCAPE berjalan aman dalam Local Demo Mode.',
+      }));
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const updateStats = (updater: (prev: PlayerStats) => PlayerStats) => {
     setStats((prev) => {
@@ -778,6 +834,16 @@ export default function App() {
     });
   };
 
+  // Synchronize student profile with game player state when logged in
+  useEffect(() => {
+    if (profile?.displayName && stats.playerName !== profile.displayName) {
+      setStats((prev) => ({
+        ...prev,
+        playerName: profile.displayName,
+      }));
+    }
+  }, [profile?.displayName, stats.playerName]);
+
   const activeLevelData = LEVELS_DATA.find((l) => l.id === activeLevelId) || LEVELS_DATA[0];
   const currentRoomArea = ROOMS_DATA[stats.currentArea || 'main_gate'] || ROOMS_DATA['main_gate'];
 
@@ -787,21 +853,43 @@ export default function App() {
     setScreen('home');
   };
 
-  if (screen === 'teacher') {
-    if (!teacherAuthenticated) {
-      return (
-        <TeacherLoginScreen
-          onSuccess={() => setTeacherAuthenticated(true)}
-          onCancel={() => setScreen('home')}
-        />
-      );
-    }
-
+  if (screen === 'student_login') {
     return (
-      <TeacherDashboardScreen
-        onSwitchToStudentMode={() => setScreen('home')}
-        onLogoutTeacher={handleTeacherLogout}
+      <StudentLoginScreen
+        onSuccess={() => setScreen('home')}
+        onSwitchToRegister={() => setScreen('student_register')}
+        onCancel={() => setScreen('home')}
       />
+    );
+  }
+
+  if (screen === 'student_register') {
+    return (
+      <StudentRegisterScreen
+        onSuccess={() => setScreen('home')}
+        onSwitchToLogin={() => setScreen('student_login')}
+        onCancel={() => setScreen('home')}
+        currentLevel={stats.currentLevel}
+        currentXp={stats.xp}
+      />
+    );
+  }
+
+  if (screen === 'teacher') {
+    return (
+      <>
+        <TeacherRouteGuard
+          onBackToHome={() => setScreen('home')}
+          dataMode={firebaseHealth.dataMode}
+          onOpenSystemStatus={() => setSystemStatusOpen(true)}
+        />
+        <SystemStatusModal
+          isOpen={systemStatusOpen}
+          onClose={() => setSystemStatusOpen(false)}
+          healthReport={firebaseHealth}
+          onRefreshReport={(newReport) => setFirebaseHealth(newReport)}
+        />
+      </>
     );
   }
 
@@ -811,6 +899,12 @@ export default function App() {
       <GameHUD
         stats={stats}
         currentScreen={screen}
+        dataMode={firebaseHealth.dataMode}
+        isOnlineAccount={isOnlineAccount}
+        studentDisplayName={profile?.displayName}
+        onOpenStudentProfile={() => setStudentProfileOpen(true)}
+        onOpenStudentLogin={() => setScreen('student_login')}
+        onOpenSystemStatus={() => setSystemStatusOpen(true)}
         onNavigateToMap={() => setScreen('world_map')}
         onOpenHowToPlay={() => setHowToPlayOpen(true)}
         onOpenResetConfirm={() => setResetConfirmOpen(true)}
@@ -841,6 +935,14 @@ export default function App() {
             hasSavedProgress={stats.completedLevels.length > 0 || (stats.unlockedAreas && stats.unlockedAreas.length > 1)}
             playerName={stats.playerName}
             currentLevel={stats.currentLevel}
+            dataMode={firebaseHealth.dataMode}
+            onOpenSystemStatus={() => setSystemStatusOpen(true)}
+            isOnlineAccount={isOnlineAccount}
+            studentProfile={profile}
+            onOpenStudentLogin={() => setScreen('student_login')}
+            onOpenStudentRegister={() => setScreen('student_register')}
+            onOpenStudentProfile={() => setStudentProfileOpen(true)}
+            onLogout={logout}
           />
         )}
 
@@ -1015,7 +1117,33 @@ export default function App() {
         data={celebrationData}
         onClose={() => setCelebrationData((prev) => ({ ...prev, isOpen: false }))}
       />
+
+      {/* System Status & Firebase Diagnostic Modal (V0.7.1) */}
+      <SystemStatusModal
+        isOpen={systemStatusOpen}
+        onClose={() => setSystemStatusOpen(false)}
+        healthReport={firebaseHealth}
+        onRefreshReport={(newReport) => setFirebaseHealth(newReport)}
+      />
+
+      {/* Student Profile & Session Modal (V0.7.2) */}
+      <StudentProfileModal
+        isOpen={studentProfileOpen}
+        onClose={() => setStudentProfileOpen(false)}
+        stats={stats}
+        onLogoutSuccess={() => setScreen('home')}
+      />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <StudentAuthProvider>
+      <TeacherAuthProvider>
+        <AppContent />
+      </TeacherAuthProvider>
+    </StudentAuthProvider>
   );
 }
 

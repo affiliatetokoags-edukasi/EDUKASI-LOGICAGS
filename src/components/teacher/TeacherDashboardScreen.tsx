@@ -28,18 +28,31 @@ import { RemedialDashboardView } from './RemedialDashboardView';
 import { EnrichmentDashboardView } from './EnrichmentDashboardView';
 import { QuestionBankView } from './QuestionBankView';
 import { TeacherSettingsView } from './TeacherSettingsView';
-import { isTeacherAuthenticated } from '../../utils/teacherAuth';
+import { isTeacherAuthenticated as isLegacyTeacherAuthenticated } from '../../utils/teacherAuth';
+import { useTeacherAuth } from '../../context/TeacherAuthContext';
 import { Bell, X, AlertTriangle, ChevronRight } from 'lucide-react';
 
 interface TeacherDashboardScreenProps {
   onSwitchToStudentMode: () => void;
   onLogoutTeacher?: () => void;
+  dataMode?: 'ONLINE' | 'LOCAL_DEMO';
+  onOpenSystemStatus?: () => void;
+  teacherProfile?: { displayName?: string; email?: string; role?: string } | null;
+  isOnlineAccount?: boolean;
 }
 
 export const TeacherDashboardScreen: React.FC<TeacherDashboardScreenProps> = ({
   onSwitchToStudentMode,
   onLogoutTeacher,
+  dataMode = 'LOCAL_DEMO',
+  onOpenSystemStatus,
+  teacherProfile: propTeacherProfile,
+  isOnlineAccount: propIsOnlineAccount,
 }) => {
+  const { teacherProfile: ctxTeacherProfile, isOnlineTeacher, isAuthenticated } = useTeacherAuth();
+  const effectiveProfile = propTeacherProfile || ctxTeacherProfile;
+  const isOnline = propIsOnlineAccount ?? isOnlineTeacher;
+
   const [students, setStudents] = useState<StudentData[]>([]);
   const [activeTab, setActiveTab] = useState<TeacherDashboardTab>('dashboard');
   const [selectedClass, setSelectedClass] = useState<string>('ALL');
@@ -48,16 +61,17 @@ export const TeacherDashboardScreen: React.FC<TeacherDashboardScreenProps> = ({
   const [alertsModalOpen, setAlertsModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Security check: verify authentication
+  // Security check: verifikasi otorisasi guru (Online Role Teacher ATAU Local Demo)
   useEffect(() => {
-    if (!isTeacherAuthenticated()) {
+    const isAuthed = isAuthenticated || isOnline || isLegacyTeacherAuthenticated();
+    if (!isAuthed) {
       if (onLogoutTeacher) {
         onLogoutTeacher();
       } else {
         onSwitchToStudentMode();
       }
     }
-  }, [onLogoutTeacher, onSwitchToStudentMode]);
+  }, [isAuthenticated, isOnline, onLogoutTeacher, onSwitchToStudentMode]);
 
   // Initialize and load data from local storage
   const reloadData = () => {
@@ -125,6 +139,10 @@ export const TeacherDashboardScreen: React.FC<TeacherDashboardScreenProps> = ({
         onSwitchToStudentMode={onSwitchToStudentMode}
         onLogoutTeacher={onLogoutTeacher}
         onOpenAlerts={() => setAlertsModalOpen(true)}
+        dataMode={dataMode}
+        onOpenSystemStatus={onOpenSystemStatus}
+        teacherProfile={effectiveProfile}
+        isOnlineAccount={isOnline}
       />
 
       {/* Main Layout: Sidebar + Content */}

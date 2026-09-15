@@ -6,7 +6,9 @@ import {
   Bell, 
   LogOut,
   Lock,
-  ChevronDown
+  ChevronDown,
+  Cloud,
+  Laptop
 } from 'lucide-react';
 import { AVAILABLE_CLASSES } from '../../data/teacherData';
 
@@ -19,6 +21,10 @@ interface TeacherHeaderProps {
   onSwitchToStudentMode: () => void;
   onLogoutTeacher?: () => void;
   onOpenAlerts: () => void;
+  dataMode?: 'ONLINE' | 'LOCAL_DEMO';
+  onOpenSystemStatus?: () => void;
+  teacherProfile?: { displayName?: string; email?: string; role?: string } | null;
+  isOnlineAccount?: boolean;
 }
 
 export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
@@ -30,6 +36,10 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
   onSwitchToStudentMode,
   onLogoutTeacher,
   onOpenAlerts,
+  dataMode = 'LOCAL_DEMO',
+  onOpenSystemStatus,
+  teacherProfile,
+  isOnlineAccount = false,
 }) => {
   return (
     <header className="sticky top-0 z-30 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-4 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
@@ -39,7 +49,7 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
           <GraduationCap className="w-6 h-6" />
         </div>
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-base font-extrabold text-white tracking-wide">
               LOGIC ESCAPE
             </span>
@@ -47,12 +57,46 @@ export const TeacherHeader: React.FC<TeacherHeaderProps> = ({
               <Lock className="w-3 h-3 text-amber-400" />
               <span>TEACHER MODE 🔒</span>
             </span>
+            {isOnlineAccount && teacherProfile ? (
+              <span className="px-2 py-0.5 rounded-md bg-cyan-500/20 border border-cyan-500/30 text-[10px] font-bold text-cyan-300 tracking-wider">
+                👤 {teacherProfile.displayName || teacherProfile.email || 'Guru Terverifikasi'}
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 text-[10px] font-bold text-amber-300 tracking-wider">
+                💻 Sesi Demo Lokal
+              </span>
+            )}
+            {onOpenSystemStatus && (
+              <button
+                id="teacher-system-status-btn"
+                onClick={onOpenSystemStatus}
+                title="Status Koneksi & Firebase System (Klik untuk Diagnostik)"
+                className={`px-2 py-0.5 rounded-md border text-[10px] font-bold tracking-wider flex items-center gap-1 transition-all cursor-pointer ${
+                  dataMode === 'ONLINE'
+                    ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/30'
+                    : 'bg-amber-500/20 border-amber-500/30 text-amber-300 hover:bg-amber-500/30'
+                }`}
+              >
+                {dataMode === 'ONLINE' ? (
+                  <>
+                    <Cloud className="w-3 h-3 text-emerald-400" />
+                    <span>☁ ONLINE</span>
+                  </>
+                ) : (
+                  <>
+                    <Laptop className="w-3 h-3 text-amber-400" />
+                    <span>💻 LOCAL DEMO</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
           <p className="text-xs text-slate-400">
             Sistem Pemantauan & Asesmen Pembelajaran Informatika
           </p>
         </div>
       </div>
+
 
       {/* Center/Right Controls: Class Selector & Switcher */}
       <div className="flex items-center flex-wrap gap-2.5 sm:gap-3">

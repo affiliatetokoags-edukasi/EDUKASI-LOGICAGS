@@ -1,0 +1,150 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Profil akun pengguna dan siswa Logic Escape di Firestore.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Authentication UID pengguna"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Nama lengkap siswa",
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "description": "Alamat email siswa"
+        },
+        "role": {
+          "type": "string",
+          "description": "Peran akun, 'student' atau 'teacher'",
+          "enum": ["student", "teacher"]
+        },
+        "classId": {
+          "type": "string",
+          "description": "ID kelas pembelajaran jika ada"
+        },
+        "avatar": {
+          "type": "string",
+          "description": "Identitas visual atau avatar siswa"
+        },
+        "level": {
+          "type": "number",
+          "description": "Level akun siswa"
+        },
+        "xp": {
+          "type": "number",
+          "description": "Total poin pengalaman siswa"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Waktu pendaftaran akun"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Waktu pembaruan profil"
+        },
+        "lastLoginAt": {
+          "type": "string",
+          "description": "Waktu terakhir masuk / login"
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Status keaktifan akun"
+        }
+      },
+      "required": ["uid", "displayName", "email", "role", "isActive"]
+    },
+    "Player": {
+      "title": "Player",
+      "description": "Profil dan progres karakter siswa dalam Logic Escape.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID unik pemain / UID siswa"
+        },
+        "username": {
+          "type": "string",
+          "description": "Nama panggilan siswa dalam game",
+          "maxLength": 50
+        },
+        "level": {
+          "type": "number",
+          "description": "Level karakter pemain"
+        },
+        "xp": {
+          "type": "number",
+          "description": "Total experience points"
+        },
+        "coin": {
+          "type": "number",
+          "description": "Jumlah koin pemain"
+        },
+        "rank": {
+          "type": "string",
+          "description": "Pangkat akademik pemain"
+        },
+        "currentArea": {
+          "type": "string",
+          "description": "Area peta ruangan saat ini"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Waktu terakhir pembaruan data"
+        }
+      },
+      "required": ["id", "username", "level", "xp", "coin"]
+    },
+    "Assessment": {
+      "title": "Assessment",
+      "description": "Hasil asesmen formatif dan sumatif siswa.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID unik rekap asesmen"
+        },
+        "studentId": {
+          "type": "string",
+          "description": "ID pemain / siswa"
+        },
+        "studentName": {
+          "type": "string",
+          "description": "Nama siswa",
+          "maxLength": 100
+        },
+        "levelId": {
+          "type": "number",
+          "description": "ID level yang dinilai"
+        },
+        "score": {
+          "type": "number",
+          "description": "Nilai capaian asesmen (0-100)"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Waktu asesmen tercatat"
+        }
+      },
+      "required": ["id", "studentId", "score"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Koleksi akun dan profil siswa Logic Escape"
+    },
+    "/players/{playerId}": {
+      "schema": "Player",
+      "description": "Koleksi data profil pemain Logic Escape"
+    },
+    "/assessments/{assessmentId}": {
+      "schema": "Assessment",
+      "description": "Koleksi hasil asesmen siswa untuk panel guru"
+    }
+  }
+}
