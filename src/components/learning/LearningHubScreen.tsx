@@ -317,9 +317,10 @@ export const LearningHubScreen: React.FC<LearningHubScreenProps> = ({
                   onOpenTeacherDashboard();
                 }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-950/80 hover:bg-indigo-900 border border-indigo-500/40 text-xs font-bold text-indigo-300 hover:text-indigo-100 transition-all cursor-pointer shadow-md shadow-indigo-950/50"
+                title="Akses Panel Guru & Asesmen (Terproteksi Password)"
               >
-                <School className="w-4 h-4 text-indigo-400" />
-                <span className="hidden sm:inline">PANEL GURU</span>
+                <Lock className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">PANEL GURU 🔒</span>
               </button>
             )}
           </div>

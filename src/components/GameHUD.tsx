@@ -18,7 +18,8 @@ import {
   BookOpen,
   Gift,
   GraduationCap,
-  School
+  School,
+  Lock
 } from 'lucide-react';
 import { PlayerStats, ScreenType } from '../types';
 import { sounds } from '../utils/audio';
@@ -217,11 +218,11 @@ export const GameHUD: React.FC<GameHUDProps> = ({
                 sounds.playClick();
                 onOpenTeacherDashboard();
               }}
-              title="Panel Guru & Asesmen Pembelajaran"
+              title="Panel Guru & Asesmen Pembelajaran (Terproteksi Password)"
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-indigo-950/60 hover:bg-indigo-900/70 border border-indigo-500/50 text-xs font-bold text-indigo-300 hover:text-indigo-100 transition-all cursor-pointer"
             >
-              <School className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="hidden sm:inline">GURU</span>
+              <Lock className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">GURU 🔒</span>
             </button>
           )}
 

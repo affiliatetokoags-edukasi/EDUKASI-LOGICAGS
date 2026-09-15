@@ -28,6 +28,9 @@ export const StudentListView: React.FC<StudentListViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [filterClass, setFilterClass] = useState<string>(selectedClass);
   const [filterMasteryRange, setFilterMasteryRange] = useState<'ALL' | 'LOW' | 'MID' | 'HIGH'>('ALL');
+  const [filterLevel, setFilterLevel] = useState<'ALL' | '1-3' | '4-6' | '7+'>('ALL');
+  const [filterAccuracy, setFilterAccuracy] = useState<'ALL' | 'HIGH' | 'MID' | 'LOW'>('ALL');
+  const [filterProgress, setFilterProgress] = useState<'ALL' | 'HIGH' | 'MID' | 'LOW'>('ALL');
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
   const [sortField, setSortField] = useState<'name' | 'mastery' | 'accuracy' | 'level' | 'xp'>('mastery');
   const [sortAsc, setSortAsc] = useState(false);
@@ -49,10 +52,27 @@ export const StudentListView: React.FC<StudentListViewProps> = ({
         if (filterClass !== 'ALL' && s.className !== filterClass) {
           return false;
         }
+        // Level
+        if (filterLevel === '1-3' && (s.level < 1 || s.level > 3)) return false;
+        if (filterLevel === '4-6' && (s.level < 4 || s.level > 6)) return false;
+        if (filterLevel === '7+' && s.level < 7) return false;
+
         // Mastery Range
         if (filterMasteryRange === 'LOW' && (s.mastery >= 60 || s.status === 'not_started')) return false;
         if (filterMasteryRange === 'MID' && (s.mastery < 60 || s.mastery >= 80)) return false;
         if (filterMasteryRange === 'HIGH' && s.mastery < 80) return false;
+
+        // Accuracy Range
+        if (filterAccuracy === 'HIGH' && s.accuracy < 80) return false;
+        if (filterAccuracy === 'MID' && (s.accuracy < 60 || s.accuracy >= 80)) return false;
+        if (filterAccuracy === 'LOW' && (s.accuracy >= 60 || s.status === 'not_started')) return false;
+
+        // Progress
+        const questPct = Math.round((s.gameProgress.questsCompleted / (s.gameProgress.totalQuests || 15)) * 100);
+        if (filterProgress === 'HIGH' && questPct < 70) return false;
+        if (filterProgress === 'MID' && (questPct < 30 || questPct >= 70)) return false;
+        if (filterProgress === 'LOW' && questPct >= 30) return false;
+
         // Status
         if (filterStatus !== 'ALL' && s.status !== filterStatus) return false;
 
@@ -176,6 +196,42 @@ export const StudentListView: React.FC<StudentListViewProps> = ({
           <option value="HIGH">≥ 80% (Mahir & Master)</option>
           <option value="MID">60% – 79% (Cakap & Berkembang)</option>
           <option value="LOW">&lt; 60% (Perlu Latihan)</option>
+        </select>
+
+        {/* Level Filter */}
+        <select
+          value={filterLevel}
+          onChange={(e) => setFilterLevel(e.target.value as any)}
+          className="px-3 py-2 rounded-xl bg-slate-800/90 border border-slate-700/80 text-xs font-bold text-slate-200 focus:outline-none cursor-pointer"
+        >
+          <option value="ALL">Semua Level</option>
+          <option value="1-3">Level 1 - 3 (Dasar)</option>
+          <option value="4-6">Level 4 - 6 (Menengah)</option>
+          <option value="7+">Level 7+ (Mahir)</option>
+        </select>
+
+        {/* Accuracy Filter */}
+        <select
+          value={filterAccuracy}
+          onChange={(e) => setFilterAccuracy(e.target.value as any)}
+          className="px-3 py-2 rounded-xl bg-slate-800/90 border border-slate-700/80 text-xs font-bold text-slate-200 focus:outline-none cursor-pointer"
+        >
+          <option value="ALL">Semua Akurasi</option>
+          <option value="HIGH">Akurasi ≥ 80%</option>
+          <option value="MID">Akurasi 60% – 79%</option>
+          <option value="LOW">Akurasi &lt; 60%</option>
+        </select>
+
+        {/* Progress Filter */}
+        <select
+          value={filterProgress}
+          onChange={(e) => setFilterProgress(e.target.value as any)}
+          className="px-3 py-2 rounded-xl bg-slate-800/90 border border-slate-700/80 text-xs font-bold text-slate-200 focus:outline-none cursor-pointer"
+        >
+          <option value="ALL">Semua Progress Game</option>
+          <option value="HIGH">Quest Selesai ≥ 70%</option>
+          <option value="MID">Quest Selesai 30% – 69%</option>
+          <option value="LOW">Quest Selesai &lt; 30%</option>
         </select>
 
         {/* Status Filter */}

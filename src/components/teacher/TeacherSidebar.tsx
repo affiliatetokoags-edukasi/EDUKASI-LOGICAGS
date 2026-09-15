@@ -11,7 +11,9 @@ import {
   HelpCircle, 
   Settings,
   Menu,
-  X
+  X,
+  LogOut,
+  Lock
 } from 'lucide-react';
 import { TeacherDashboardTab } from '../../types';
 
@@ -22,6 +24,7 @@ interface TeacherSidebarProps {
   enrichmentCount: number;
   mobileMenuOpen: boolean;
   onToggleMobileMenu: () => void;
+  onLogoutTeacher?: () => void;
 }
 
 interface NavItem {
@@ -39,6 +42,7 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({
   enrichmentCount,
   mobileMenuOpen,
   onToggleMobileMenu,
+  onLogoutTeacher,
 }) => {
   const navItems: NavItem[] = [
     { id: 'dashboard', label: 'Ringkasan', icon: LayoutDashboard },
@@ -115,15 +119,32 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({
               </button>
             );
           })}
+
+          {onLogoutTeacher && (
+            <button
+              onClick={() => {
+                onToggleMobileMenu();
+                onLogoutTeacher();
+              }}
+              className="col-span-2 flex items-center justify-center gap-2 p-2.5 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs font-bold transition-all cursor-pointer mt-1"
+            >
+              <LogOut className="w-4 h-4 text-rose-400" />
+              <span>LOGOUT GURU</span>
+            </button>
+          )}
         </div>
       )}
 
       {/* Desktop Sidebar (Permanent) */}
       <aside className="hidden lg:flex flex-col w-64 shrink-0 bg-slate-900/80 border-r border-slate-800/80 p-4 space-y-1.5 min-h-[calc(100vh-65px)]">
-        <div className="px-3 py-2 mb-1">
+        <div className="px-3 py-2 mb-1 flex items-center justify-between">
           <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
             Navigasi Asesmen
           </p>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300 flex items-center gap-1">
+            <Lock className="w-2.5 h-2.5" />
+            SECURE
+          </span>
         </div>
 
         {navItems.map((item) => {
@@ -151,6 +172,20 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({
             </button>
           );
         })}
+
+        {/* Desktop Logout Button */}
+        {onLogoutTeacher && (
+          <div className="pt-3">
+            <button
+              id="sidebar-logout-teacher-btn"
+              onClick={onLogoutTeacher}
+              className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold bg-rose-950/40 hover:bg-rose-900/60 border border-rose-500/30 text-rose-300 hover:text-rose-100 transition-all cursor-pointer shadow-sm active:scale-98"
+            >
+              <LogOut className="w-4 h-4 text-rose-400" />
+              <span>LOGOUT GURU</span>
+            </button>
+          </div>
+        )}
 
         <div className="mt-auto pt-4 border-t border-slate-800/60 text-center">
           <p className="text-[11px] text-slate-400 font-medium">

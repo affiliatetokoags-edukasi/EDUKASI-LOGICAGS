@@ -28,14 +28,17 @@ import { RemedialDashboardView } from './RemedialDashboardView';
 import { EnrichmentDashboardView } from './EnrichmentDashboardView';
 import { QuestionBankView } from './QuestionBankView';
 import { TeacherSettingsView } from './TeacherSettingsView';
+import { isTeacherAuthenticated } from '../../utils/teacherAuth';
 import { Bell, X, AlertTriangle, ChevronRight } from 'lucide-react';
 
 interface TeacherDashboardScreenProps {
   onSwitchToStudentMode: () => void;
+  onLogoutTeacher?: () => void;
 }
 
 export const TeacherDashboardScreen: React.FC<TeacherDashboardScreenProps> = ({
   onSwitchToStudentMode,
+  onLogoutTeacher,
 }) => {
   const [students, setStudents] = useState<StudentData[]>([]);
   const [activeTab, setActiveTab] = useState<TeacherDashboardTab>('dashboard');
@@ -44,6 +47,17 @@ export const TeacherDashboardScreen: React.FC<TeacherDashboardScreenProps> = ({
   const [rubric, setRubric] = useState<AssessmentRubric>(getStoredTeacherConfig().rubric);
   const [alertsModalOpen, setAlertsModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Security check: verify authentication
+  useEffect(() => {
+    if (!isTeacherAuthenticated()) {
+      if (onLogoutTeacher) {
+        onLogoutTeacher();
+      } else {
+        onSwitchToStudentMode();
+      }
+    }
+  }, [onLogoutTeacher, onSwitchToStudentMode]);
 
   // Initialize and load data from local storage
   const reloadData = () => {
@@ -109,6 +123,7 @@ export const TeacherDashboardScreen: React.FC<TeacherDashboardScreenProps> = ({
         activeStudents={students.filter((s) => s.lastActiveDaysAgo <= 3).length}
         alertCount={alerts.length}
         onSwitchToStudentMode={onSwitchToStudentMode}
+        onLogoutTeacher={onLogoutTeacher}
         onOpenAlerts={() => setAlertsModalOpen(true)}
       />
 
@@ -122,6 +137,7 @@ export const TeacherDashboardScreen: React.FC<TeacherDashboardScreenProps> = ({
           enrichmentCount={enrichmentCount}
           mobileMenuOpen={mobileMenuOpen}
           onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
+          onLogoutTeacher={onLogoutTeacher}
         />
 
         {/* Dynamic Tab Content Area */}

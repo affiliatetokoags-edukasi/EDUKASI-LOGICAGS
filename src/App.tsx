@@ -34,6 +34,8 @@ import { RewardChestModal } from './components/gamification/RewardChestModal';
 import { ProgressCenterModal } from './components/gamification/ProgressCenterModal';
 import { LearningHubScreen } from './components/learning/LearningHubScreen';
 import { TeacherDashboardScreen } from './components/teacher/TeacherDashboardScreen';
+import { TeacherLoginScreen } from './components/teacher/TeacherLoginScreen';
+import { isTeacherAuthenticated, clearTeacherSession } from './utils/teacherAuth';
 import {
   calculatePlayerRank,
   checkLevelUpEvent,
@@ -52,6 +54,7 @@ export default function App() {
     return syncedStats;
   });
   const [screen, setScreen] = useState<ScreenType>('home');
+  const [teacherAuthenticated, setTeacherAuthenticated] = useState<boolean>(() => isTeacherAuthenticated());
   const [activeLevelId, setActiveLevelId] = useState<number>(1);
   const [howToPlayOpen, setHowToPlayOpen] = useState<boolean>(false);
   const [resetConfirmOpen, setResetConfirmOpen] = useState<boolean>(false);
@@ -778,10 +781,26 @@ export default function App() {
   const activeLevelData = LEVELS_DATA.find((l) => l.id === activeLevelId) || LEVELS_DATA[0];
   const currentRoomArea = ROOMS_DATA[stats.currentArea || 'main_gate'] || ROOMS_DATA['main_gate'];
 
+  const handleTeacherLogout = () => {
+    clearTeacherSession();
+    setTeacherAuthenticated(false);
+    setScreen('home');
+  };
+
   if (screen === 'teacher') {
+    if (!teacherAuthenticated) {
+      return (
+        <TeacherLoginScreen
+          onSuccess={() => setTeacherAuthenticated(true)}
+          onCancel={() => setScreen('home')}
+        />
+      );
+    }
+
     return (
       <TeacherDashboardScreen
         onSwitchToStudentMode={() => setScreen('home')}
+        onLogoutTeacher={handleTeacherLogout}
       />
     );
   }

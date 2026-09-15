@@ -162,8 +162,8 @@ export const TeacherSettingsView: React.FC<TeacherSettingsViewProps> = ({
               type="number"
               min={80}
               max={100}
-              value={localRubric.masterThreshold}
-              onChange={(e) => setLocalRubric({ ...localRubric, masterThreshold: Number(e.target.value) })}
+              value={localRubric.masterMin ?? 90}
+              onChange={(e) => setLocalRubric({ ...localRubric, masterMin: Number(e.target.value) })}
               className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white font-bold"
             />
             <span className="text-[10px] text-slate-400">Default: 90%</span>
@@ -177,8 +177,8 @@ export const TeacherSettingsView: React.FC<TeacherSettingsViewProps> = ({
               type="number"
               min={70}
               max={89}
-              value={localRubric.advancedThreshold}
-              onChange={(e) => setLocalRubric({ ...localRubric, advancedThreshold: Number(e.target.value) })}
+              value={localRubric.advancedMin ?? 80}
+              onChange={(e) => setLocalRubric({ ...localRubric, advancedMin: Number(e.target.value) })}
               className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white font-bold"
             />
             <span className="text-[10px] text-slate-400">Default: 80%</span>
@@ -192,8 +192,8 @@ export const TeacherSettingsView: React.FC<TeacherSettingsViewProps> = ({
               type="number"
               min={60}
               max={79}
-              value={localRubric.capableThreshold}
-              onChange={(e) => setLocalRubric({ ...localRubric, capableThreshold: Number(e.target.value) })}
+              value={localRubric.capableMin ?? 70}
+              onChange={(e) => setLocalRubric({ ...localRubric, capableMin: Number(e.target.value) })}
               className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white font-bold"
             />
             <span className="text-[10px] text-slate-400">Default: 70%</span>
@@ -207,8 +207,12 @@ export const TeacherSettingsView: React.FC<TeacherSettingsViewProps> = ({
               type="number"
               min={40}
               max={69}
-              value={localRubric.developingThreshold}
-              onChange={(e) => setLocalRubric({ ...localRubric, developingThreshold: Number(e.target.value) })}
+              value={localRubric.developingMin ?? 60}
+              onChange={(e) => setLocalRubric({ 
+                ...localRubric, 
+                developingMin: Number(e.target.value),
+                needsPracticeMax: Number(e.target.value) - 1 
+              })}
               className="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white font-bold"
             />
             <span className="text-[10px] text-slate-400">&lt; Ambang ini masuk Remedial</span>

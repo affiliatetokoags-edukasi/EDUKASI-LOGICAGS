@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Play, HelpCircle, Shield, Sparkles, Brain, Cpu, Compass, GraduationCap, School } from 'lucide-react';
+import { Play, HelpCircle, Shield, Sparkles, Brain, Cpu, Compass, GraduationCap, School, Lock } from 'lucide-react';
 import { sounds } from '../utils/audio';
 
 interface HomeScreenProps {
@@ -133,10 +133,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 sounds.playClick();
                 onOpenTeacherDashboard();
               }}
-              className="w-full py-3.5 px-6 rounded-2xl bg-indigo-950/70 hover:bg-indigo-900/80 active:scale-98 text-indigo-300 hover:text-indigo-100 font-extrabold text-sm border border-indigo-500/40 shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-6 rounded-2xl bg-indigo-950/70 hover:bg-indigo-900/80 active:scale-98 text-indigo-300 hover:text-indigo-100 font-extrabold text-sm border border-indigo-500/40 shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 group"
             >
-              <School className="w-4 h-4 text-indigo-400" />
-              <span>PANEL GURU & ASESMEN V0.6</span>
+              <Lock className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+              <span>TEACHER MODE 🔒</span>
             </button>
           )}
 
